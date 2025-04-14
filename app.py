@@ -1,113 +1,157 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-# HTML, CSS og JavaScript-kode til spillet
+# HTML, CSS og JavaScript kode til 3D-spillet
 html_code = """
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Skovspil</title>
+  <title>3D Skovspil - Counter Strike Stil</title>
   <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-    }
-    canvas {
-      display: block;
-      background-color: #90EE90; /* Lys grøn baggrund, der minder om en skov */
-    }
+    body { margin: 0; overflow: hidden; }
+    canvas { display: block; }
   </style>
 </head>
 <body>
-<canvas id="gameCanvas" width="800" height="600"></canvas>
+<!-- Import af Three.js fra CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r150/three.min.js"></script>
 <script>
-  // Hent canvas-elementet og få 2D tegnekontekst
-  const canvas = document.getElementById("gameCanvas");
-  const ctx = canvas.getContext("2d");
+// Opret scene, kamera og renderer
+var scene = new THREE.Scene();
+var camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+var renderer = new THREE.WebGLRenderer();
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
 
-  // Opret manden med startposition, størrelse og farve
-  const man = {
-      x: canvas.width / 2 - 10,
-      y: canvas.height / 2 - 10,
-      width: 20,
-      height: 20,
-      color: "blue"
-  };
-  const speed = 5;
+// Opret jorden som en stor grøn plan
+var groundGeometry = new THREE.PlaneGeometry(500, 500);
+var groundMaterial = new THREE.MeshPhongMaterial({ color: 0x228B22 });
+var ground = new THREE.Mesh(groundGeometry, groundMaterial);
+ground.rotation.x = -Math.PI / 2;
+scene.add(ground);
 
-  // Generer træerne én gang, så de forbliver statiske
-  const trees = [];
-  const antalTraeer = 20;
-  for (let i = 0; i < antalTraeer; i++) {
-      trees.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          radius: 10 + Math.random() * 10  // Varierende størrelse på træerne
-      });
-  }
+// Tilføj lys til scenen
+var ambientLight = new THREE.AmbientLight(0x404040);
+scene.add(ambientLight);
+var directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+directionalLight.position.set(50, 50, 50);
+scene.add(directionalLight);
 
-  // Funktion til at tegne hele scenen
-  function draw() {
-      // Ryd canvasen
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // Tegn baggrunden (skovbund)
-      ctx.fillStyle = "#90EE90";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
-      // Tegn træerne
-      trees.forEach(tree => {
-          ctx.beginPath();
-          ctx.arc(tree.x, tree.y, tree.radius, 0, 2 * Math.PI);
-          ctx.fillStyle = "darkgreen";
-          ctx.fill();
-      });
-      
-      // Tegn manden
-      ctx.fillStyle = man.color;
-      ctx.fillRect(man.x, man.y, man.width, man.height);
-  }
+// Funktion til at tilføje træer i skoven
+function addTree(x, z) {
+    // Træstamme
+    var trunkGeometry = new THREE.CylinderGeometry(0.5, 0.5, 5);
+    var trunkMaterial = new THREE.MeshPhongMaterial({ color: 0x8B4513 });
+    var trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+    trunk.position.set(x, 2.5, z);
+    scene.add(trunk);
+    // Trækroner
+    var crownGeometry = new THREE.ConeGeometry(2.5, 8, 8);
+    var crownMaterial = new THREE.MeshPhongMaterial({ color: 0x006400 });
+    var crown = new THREE.Mesh(crownGeometry, crownMaterial);
+    crown.position.set(x, 7, z);
+    scene.add(crown);
+}
+// Tilføj 50 træer med tilfældige positioner
+for (var i = 0; i < 50; i++) {
+    var x = Math.random() * 400 - 200;
+    var z = Math.random() * 400 - 200;
+    addTree(x, z);
+}
 
-  // Opdater mandens position baseret på tryk på piletasterne
-  function updatePosition(event) {
-      switch (event.key) {
-          case "ArrowUp":
-              man.y -= speed;
-              break;
-          case "ArrowDown":
-              man.y += speed;
-              break;
-          case "ArrowLeft":
-              man.x -= speed;
-              break;
-          case "ArrowRight":
-              man.x += speed;
-              break;
-          default:
-              return; // Ingen relevant tast blev trykket
-      }
+// Placér kameraet (førstepersons)
+camera.position.set(0, 2, 0);
 
-      // Sørg for, at manden forbliver inden for canvasgrænserne
-      man.x = Math.max(0, Math.min(canvas.width - man.width, man.x));
-      man.y = Math.max(0, Math.min(canvas.height - man.height, man.y));
+// Variabler for bevægelse
+var moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+var speed = 0.5;
 
-      // Gen-tegn scenen med den opdaterede position
-      draw();
-  }
+// Lyt efter tastetryk for at styre bevægelsen
+document.addEventListener('keydown', function(event) {
+    switch(event.code) {
+        case 'ArrowUp':
+        case 'KeyW':
+            moveForward = true;
+            break;
+        case 'ArrowLeft':
+        case 'KeyA':
+            moveLeft = true;
+            break;
+        case 'ArrowDown':
+        case 'KeyS':
+            moveBackward = true;
+            break;
+        case 'ArrowRight':
+        case 'KeyD':
+            moveRight = true;
+            break;
+    }
+}, false);
+document.addEventListener('keyup', function(event) {
+    switch(event.code) {
+        case 'ArrowUp':
+        case 'KeyW':
+            moveForward = false;
+            break;
+        case 'ArrowLeft':
+        case 'KeyA':
+            moveLeft = false;
+            break;
+        case 'ArrowDown':
+        case 'KeyS':
+            moveBackward = false;
+            break;
+        case 'ArrowRight':
+        case 'KeyD':
+            moveRight = false;
+            break;
+    }
+}, false);
 
-  // Lyt efter tastetryk og kør funktionen for at opdatere positionen
-  document.addEventListener("keydown", updatePosition);
+// Animer scenen og opdater kameraets position
+function animate() {
+    requestAnimationFrame(animate);
 
-  // Første kald til draw for at vise startscenen
-  draw();
+    // Bestem bevægelsesretningen baseret på kameraets fremadrettede vektor
+    var direction = new THREE.Vector3();
+    camera.getWorldDirection(direction);
+    direction.y = 0;  // Ignorer lodret retning
+    direction.normalize();
+
+    // Beregn "højre" vektor (vinkelret på kameraets retning)
+    var right = new THREE.Vector3();
+    right.crossVectors(camera.up, direction).normalize();
+
+    // Saml bevægelsesvektoren
+    var moveVector = new THREE.Vector3();
+    if (moveForward) moveVector.add(direction);
+    if (moveBackward) moveVector.sub(direction);
+    if (moveLeft) moveVector.add(right);
+    if (moveRight) moveVector.sub(right);
+
+    moveVector.normalize().multiplyScalar(speed);
+    camera.position.add(moveVector);
+
+    renderer.render(scene, camera);
+}
+animate();
+
+// Sørg for, at canvas tilpasses ved vinduesændringer
+window.addEventListener('resize', function(){
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    renderer.setSize(width, height);
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+});
 </script>
 </body>
 </html>
 """
 
-st.title("Skovspil med bevægelig mand")
-st.write("Brug piletasterne til at flytte manden rundt i skoven.")
+st.title("3D Skovspil i Counter Strike Stil")
+st.write("Brug piletasterne (eller WASD) til at navigere gennem skoven.")
 
-# Embed HTML-appen i Streamlit via komponenten
-components.html(html_code, height=620)
+# Indlejr HTML/JS-spillet i Streamlit-appen
+components.html(html_code, height=600, scrolling=True)
