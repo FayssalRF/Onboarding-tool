@@ -1,5 +1,6 @@
+```python
 import streamlit as st
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 import pandas as pd
 import os
 
@@ -10,11 +11,32 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# --- Load assets ---
+# --- Load assets with fallback ---
 ASSETS = os.path.join(os.path.dirname(__file__), "assets")
-logo = Image.open(os.path.join(ASSETS, "logo.png"))
-bell = Image.open(os.path.join(ASSETS, "bell.png"))
-profile_img = Image.open(os.path.join(ASSETS, "default_profile.png"))
+def load_image(filename, fallback=None):
+    path = os.path.join(ASSETS, filename)
+    try:
+        return Image.open(path)
+    except (FileNotFoundError, UnidentifiedImageError):
+        return fallback
+
+# Attempt to load images; fallback to None
+logo = load_image("logo.png")
+bell = load_image("bell.png")
+profile_img = load_image("default_profile.png")
+
+# Helper to convert image to base64 or return empty string
+def img_to_base64(img):
+    if img:
+        try:
+            return st._to_bytes(img)
+        except Exception:
+            return ""
+    return ""
+
+logo_b64 = img_to_base64(logo)
+bell_b64 = img_to_base64(bell)
+profile_b64 = img_to_base64(profile_img)
 
 # --- Custom CSS styling ---
 st.markdown(
@@ -41,27 +63,30 @@ st.markdown(
 )
 
 # --- Top Navigation Bar ---
-st.markdown(
-    f"<div class='top-bar'>"
-    f"  <div style='display:flex; align-items:center; gap:1rem;'>"
-    f"    <img src='data:image/png;base64,{st._to_bytes(logo)}' height='32'/><h2>Mover CS Onboarding Tracker</h2>"
-    f"  </div>"
-    f"  <div style='display:flex; align-items:center; gap:1rem;'>"
-    f"    <img src='data:image/png;base64,{st._to_bytes(bell)}' height='24'/>"
-    f"    <div class='profile-menu'>"
-    f"      <img src='data:image/png;base64,{st._to_bytes(profile_img)}' height='32' style='border-radius:50%; margin-right:0.5rem;'/>"
-    f"      <span>John Doe (Admin)</span>"
-    f"      <div class='profile-menu-content'>"
-    f"        <a href='#'>My Profile</a>"
-    f"        <a href='#'>Settings</a>"
-    f"        <a href='#'>Manage accounts</a>"
-    f"        <a href='#' class='logout'>Logout</a>"
-    f"      </div>"
-    f"    </div>"
-    f"  </div>"
-    f"</div>",
-    unsafe_allow_html=True
+topbar_html = ["<div class='top-bar'>"]
+# Left: Logo and Title
+if logo_b64:
+    topbar_html.append(f"<img src='data:image/png;base64,{logo_b64}' height='32'/>")
+topbar_html.append("<h2>Mover CS Onboarding Tracker</h2>")
+# Right: Bell and Profile
+if bell_b64:
+    topbar_html.append(f"<img src='data:image/png;base64,{bell_b64}' height='24'/>")
+topbar_html.append("<div class='profile-menu'>")
+if profile_b64:
+    topbar_html.append(f"<img src='data:image/png;base64,{profile_b64}' height='32' style='border-radius:50%; margin-right:0.5rem;'/>")
+topbar_html.append("<span>John Doe (Admin)</span>")
+topbar_html.append(
+    "<div class='profile-menu-content'>"
+    "<a href='#'>My Profile</a>"
+    "<a href='#'>Settings</a>  "
+    "<a href='#'>Manage accounts</a>"
+    "<a href='#' class='logout'>Logout</a>"
+    "</div>"
 )
+topbar_html.append("</div>" )
+topbar_html.append("</div>")
+
+st.markdown("".join(topbar_html), unsafe_allow_html=True)
 
 # --- Header and Buttons ---
 st.markdown("## Customer Onboarding Dashboard")
@@ -87,7 +112,7 @@ for col, item in zip(kpi_cols, kpi_data):
             f"<div class='card'><h4>{item['title']}</h4>"
             f"<div class='kpi-value'>{item['value']}</div>"
             f"<small>{item['sub']}</small>"
-            f"{'<span style=\"float:right; color:#3366FF;\">'+item['percent']+'</span>' if item['percent'] else ''}"
+            f"{('<span style=\"float:right; color:#3366FF;\">'+item['percent']+'</span>') if item['percent'] else ''}"
             f"</div>",
             unsafe_allow_html=True
         )
@@ -122,3 +147,4 @@ with right:
             f"</div>",
             unsafe_allow_html=True
         )
+```
