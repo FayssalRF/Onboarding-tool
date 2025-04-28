@@ -1,4 +1,3 @@
-```python
 import streamlit as st
 from PIL import Image, UnidentifiedImageError
 import pandas as pd
@@ -13,19 +12,16 @@ st.set_page_config(
 
 # --- Load assets with fallback ---
 ASSETS = os.path.join(os.path.dirname(__file__), "assets")
-def load_image(filename, fallback=None):
-    path = os.path.join(ASSETS, filename)
+def load_image(filename):
     try:
-        return Image.open(path)
+        return Image.open(os.path.join(ASSETS, filename))
     except (FileNotFoundError, UnidentifiedImageError):
-        return fallback
+        return None
 
-# Attempt to load images; fallback to None
 logo = load_image("logo.png")
 bell = load_image("bell.png")
 profile_img = load_image("default_profile.png")
 
-# Helper to convert image to base64 or return empty string
 def img_to_base64(img):
     if img:
         try:
@@ -64,11 +60,11 @@ st.markdown(
 
 # --- Top Navigation Bar ---
 topbar_html = ["<div class='top-bar'>"]
-# Left: Logo and Title
+# Left side
 if logo_b64:
     topbar_html.append(f"<img src='data:image/png;base64,{logo_b64}' height='32'/>")
 topbar_html.append("<h2>Mover CS Onboarding Tracker</h2>")
-# Right: Bell and Profile
+# Right side
 if bell_b64:
     topbar_html.append(f"<img src='data:image/png;base64,{bell_b64}' height='24'/>")
 topbar_html.append("<div class='profile-menu'>")
@@ -78,28 +74,27 @@ topbar_html.append("<span>John Doe (Admin)</span>")
 topbar_html.append(
     "<div class='profile-menu-content'>"
     "<a href='#'>My Profile</a>"
-    "<a href='#'>Settings</a>  "
+    "<a href='#'>Settings</a>"
     "<a href='#'>Manage accounts</a>"
     "<a href='#' class='logout'>Logout</a>"
     "</div>"
 )
-topbar_html.append("</div>" )
-topbar_html.append("</div>")
+topbar_html.append("</div></div>")
 
 st.markdown("".join(topbar_html), unsafe_allow_html=True)
 
-# --- Header and Buttons ---
+# --- Header and Action Buttons ---
 st.markdown("## Customer Onboarding Dashboard")
-col1, col2 = st.columns([1, 1], gap='small')
+col1, col2 = st.columns([1, 1], gap="small")
 with col1:
-    if st.button('+ New Customer'):
-        st.info('+ New Customer clicked')
+    if st.button("+ New Customer"):
+        st.info("+ New Customer clicked")
 with col2:
-    if st.button('Filter'):
-        st.info('Filter clicked')
+    if st.button("Filter"):
+        st.info("Filter clicked")
 
 # --- KPI Cards ---
-kpi_cols = st.columns(4, gap='large')
+kpi_cols = st.columns(4, gap="large")
 kpi_data = [
     {"title": "Active Onboardings", "value": "24", "sub": "This Month", "percent": "+12%"},
     {"title": "Expected Revenue",  "value": "$124,500", "sub": "Realized: $78,200", "percent": None},
@@ -108,34 +103,37 @@ kpi_data = [
 ]
 for col, item in zip(kpi_cols, kpi_data):
     with col:
+        percent_html = f"<span style='float:right; color:#3366FF;'>{item['percent']}</span>" if item["percent"] else ""
         st.markdown(
             f"<div class='card'><h4>{item['title']}</h4>"
             f"<div class='kpi-value'>{item['value']}</div>"
             f"<small>{item['sub']}</small>"
-            f"{('<span style=\"float:right; color:#3366FF;\">'+item['percent']+'</span>') if item['percent'] else ''}"
-            f"</div>",
-            unsafe_allow_html=True
+            f"{percent_html}</div>",
+            unsafe_allow_html=True,
         )
 
 # --- Table & Next Actions ---
-left, right = st.columns([3, 1], gap='large')
+left, right = st.columns([3, 1], gap="large")
 with left:
     st.markdown("### Active Onboardings")
-    df = pd.DataFrame([
-        ["Acme Corp", "Day 12 of 30 (40%)", "$12,500/$25,000", 18, "On Track"],
-        ["Global Logistics", "Day 8 of 30 (27%)", "$5,200/$15,000", 7, "Needs Attention"],
-        ["Trans Continental", "Day 25 of 30 (83%)", "$42,000/$45,000", 38, "Ahead of Schedule"],
-        ["Swift Shipping", "Day 15 of 30 (50%)", "$18,500/$30,000", 22, "Meeting Expectations"],
-    ], columns=["Customer", "Progress", "Revenue", "Bookings", "Status"])
+    df = pd.DataFrame(
+        [
+            ["Acme Corp", "Day 12 of 30 (40%)", "$12,500/$25,000", 18, "On Track"],
+            ["Global Logistics", "Day 8 of 30 (27%)", "$5,200/$15,000", 7, "Needs Attention"],
+            ["Trans Continental", "Day 25 of 30 (83%)", "$42,000/$45,000", 38, "Ahead of Schedule"],
+            ["Swift Shipping", "Day 15 of 30 (50%)", "$18,500/$30,000", 22, "Meeting Expectations"],
+        ],
+        columns=["Customer", "Progress", "Revenue", "Bookings", "Status"],
+    )
     st.table(df)
 
 with right:
     st.markdown("### Next Actions <a href='#'>+ Add</a>", unsafe_allow_html=True)
     actions = [
-        {"title": "Follow-up Meeting",    "company": "Acme Corp",         "time": "10:30 AM - 11:15 AM", "tag": "Today",      "btn": "Start",   "color": "#3366FF"},
-        {"title": "First Quarter Review",  "company": "Trans Continental", "time": "2:00 PM - 3:00 PM",   "tag": "Tomorrow",  "btn": "Prepare", "color": "#8B5CF6"},
-        {"title": "Risk Assessment",       "company": "Global Logistics",  "time": "9:00 AM - 10:00 AM",  "tag": "Fri, Jun 2", "btn": "Review",  "color": "#FBBF24"},
-        {"title": "Onboarding Completion", "company": "Swift Shipping",    "time": "1:30 PM - 2:30 PM",  "tag": "Mon, Jun 5","btn": "Prepare", "color": "#10B981"},
+        {"title": "Follow-up Meeting",    "company": "Acme Corp",         "time": "10:30 AM – 11:15 AM", "tag": "Today",     "btn": "Start",   "color": "#3366FF"},
+        {"title": "First Quarter Review",  "company": "Trans Continental", "time": "2:00 PM – 3:00 PM",   "tag": "Tomorrow", "btn": "Prepare","color": "#8B5CF6"},
+        {"title": "Risk Assessment",       "company": "Global Logistics",  "time": "9:00 AM – 10:00 AM",  "tag": "Fri, Jun 2","btn": "Review", "color": "#FBBF24"},
+        {"title": "Onboarding Completion", "company": "Swift Shipping",    "time": "1:30 PM – 2:30 PM",  "tag": "Mon, Jun 5","btn": "Prepare","color": "#10B981"},
     ]
     for act in actions:
         st.markdown(
@@ -145,6 +143,5 @@ with right:
             f"<button class='btn-primary' style='background:{act['color']};'>{act['btn']}</button> "
             f"<button>Edit</button>"
             f"</div>",
-            unsafe_allow_html=True
+            unsafe_allow_html=True,
         )
-```
