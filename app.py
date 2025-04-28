@@ -1,8 +1,6 @@
-```
-# CS Onboarding Tool - Streamlit App
+# CS Onboarding Tool
 
-## Repo Structure
-
+## Projektstruktur (til README.md)
 ```
 cs-onboarding-tool/
 ├── .streamlit/
@@ -15,7 +13,7 @@ cs-onboarding-tool/
 └── requirements.txt
 ```
 
-### .streamlit/config.toml
+## .streamlit/config.toml
 ```toml
 [server]
 headless = true
@@ -30,33 +28,36 @@ textColor = "#111827"
 font = "sans serif"
 ```
 
-### requirements.txt
+## requirements.txt
 ```
 streamlit
 Pillow
 pandas
 ```
 
-### app.py
+---
+
+# app.py
 ```python
 import streamlit as st
 from PIL import Image
 import pandas as pd
 import os
 
+# --- Streamlit page config ---
 st.set_page_config(
     page_title="CS Onboarding Tool",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
 
-# Paths
+# --- Load assets ---
 ASSETS = os.path.join(os.path.dirname(__file__), "assets")
 logo = Image.open(os.path.join(ASSETS, "logo.png"))
 bell = Image.open(os.path.join(ASSETS, "bell.png"))
-profile = Image.open(os.path.join(ASSETS, "default_profile.png"))
+profile_img = Image.open(os.path.join(ASSETS, "default_profile.png"))
 
-# Custom CSS
+# --- Custom CSS styling ---
 st.markdown(
     """
     <style>
@@ -73,38 +74,40 @@ st.markdown(
     .profile-menu-content a.logout { color: #DC2626; border-top: 1px solid #E5E7EB; }
     .card { background-color: #FFFFFF; border-radius: 12px; padding: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
     .kpi-value { font-size: 1.5rem; font-weight: 600; }
-    .btn-primary { background-color: #3366FF; color: white; padding: 0.5rem 1rem; border-radius: 6px; border: none; }
-    .btn-filter { background-color: #FFFFFF; border: 1px solid #D1D5DB; padding: 0.5rem 1rem; border-radius: 6px; }
+    .btn-primary { background-color: #3366FF; color: white; padding: 0.5rem 1rem; border-radius: 6px; border: none; cursor: pointer; }
+    .btn-filter { background-color: #FFFFFF; border: 1px solid #D1D5DB; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; }
     </style>
     """, unsafe_allow_html=True
 )
 
-# Top Navigation bar
-st.markdown("<div class='top-bar'>"
-            f"<img src='data:image/png;base64,{st.experimental_get_websocket()}' style='height:32px;'>"
-            "<h2>Mover CS Onboarding Tracker</h2>"
-            "<div style='display:flex; align-items:center; gap:1rem;'>"
-            f"<img src='data:image/png;base64,{st.experimental_get_websocket()}' style='height:24px;'/><div class='profile-menu'>"
-            f"<img src='data:image/png;base64,{st.experimental_get_websocket()}' style='height:32px; border-radius:50%; margin-right:0.5rem;'/>"
-            "<span>John Doe (Admin)</span>"
-            "<div class='profile-menu-content'>"
-            "<a href='#'>My Profile</a>"
-            "<a href='#'>Settings</a>"
-            "<a href='#'>Manage accounts</a>"
-            "<a href='#' class='logout'>Logout</a>"
-            "</div></div></div></div>", unsafe_allow_html=True)
+# --- Top Navigation Bar ---
+st.markdown(
+    f"<div class='top-bar'>"
+    f"<div style='display:flex; align-items:center; gap:1rem;'>"
+    f"<img src='data:image/png;base64,{st._to_bytes(logo)}' height='32'/><h2>Mover CS Onboarding Tracker</h2></div>"
+    f"<div style='display:flex; align-items:center; gap:1rem;'>"
+    f"<img src='data:image/png;base64,{st._to_bytes(bell)}' height='24'/><div class='profile-menu'>"
+    f"<img src='data:image/png;base64,{st._to_bytes(profile_img)}' height='32' style='border-radius:50%;'/><span>John Doe (Admin)</span>"
+    f"<div class='profile-menu-content'>"
+    f"<a href='#'>My Profile</a>"
+    f"<a href='#'>Settings</a>"
+    f"<a href='#'>Manage accounts</a>"
+    f"<a href='#' class='logout'>Logout</a>"
+    f"</div></div></div></div>",
+    unsafe_allow_html=True
+)
 
-# Main header and buttons
+# --- Header and Buttons ---
 st.markdown("## Customer Onboarding Dashboard")
 col1, col2 = st.columns([1,1], gap='small')
 with col1:
-    st.markdown("<button class='btn-primary'>+ New Customer</button>", unsafe_allow_html=True)
+    if st.button('+ New Customer'):
+        st.info('+ New Customer clicked')
 with col2:
-    st.markdown("<button class='btn-filter'>Filter</button>", unsafe_allow_html=True)
+    if st.button('Filter'):
+        st.info('Filter clicked')
 
-st.markdown("<br>", unsafe_allow_html=True)
-
-# KPI Cards
+# --- KPI Cards ---
 kpi_cols = st.columns(4, gap='large')
 kpi_data = [
     {"title": "Active Onboardings", "value": "24", "sub": "This Month", "percent": "+12%"},
@@ -114,15 +117,16 @@ kpi_data = [
 ]
 for col, item in zip(kpi_cols, kpi_data):
     with col:
-        st.markdown(f"<div class='card'><h4>{item['title']}</h4>"
-                    f"<div class='kpi-value'>{item['value']}</div>"
-                    f"<small>{item['sub']}</small>"
-                    f"{'<span style=\"float:right; color:#4F46E5;\">'+item['percent']+'</span>' if item['percent'] else ''}"  # noqa
-                    f"</div>", unsafe_allow_html=True)
+        st.markdown(
+            f"<div class='card'><h4>{item['title']}</h4>"
+            f"<div class='kpi-value'>{item['value']}</div>"
+            f"<small>{item['sub']}</small>"
+            f"{'<span style=\"float:right; color:#3366FF;\">'+item['percent']+'</span>' if item['percent'] else ''}"  # noqa
+            f"</div>", unsafe_allow_html=True
+        )
 
-# Table and Next Actions
-left, right = st.columns([3, 1], gap='large')
-
+# --- Table & Next Actions ---
+left, right = st.columns([3,1], gap='large')
 with left:
     st.markdown("### Active Onboardings")
     df = pd.DataFrame([
@@ -132,7 +136,6 @@ with left:
         ["Swift Shipping", "Day 15 of 30 (50%)", "$18,500/$30,000", 22, "Meeting Expectations"],
     ], columns=["Customer", "Progress", "Revenue", "Bookings", "Status"])
     st.table(df)
-
 with right:
     st.markdown("### Next Actions <a href='#'>+ Add</a>", unsafe_allow_html=True)
     actions = [
@@ -146,7 +149,7 @@ with right:
             f"<div class='card' style='border-left:4px solid {act['color']}; margin-bottom:1rem;'>"
             f"<h5>{act['title']}</h5><small>{act['company']}</small><br>"
             f"<small>🕒 {act['time']} <span style='float:right; background:{act['color']}; color:white; padding:2px 6px; border-radius:4px;'>{act['tag']}</span></small><br><br>"
-            f"<button class='btn-primary' style='background:{act['color']};'>{act['btn']}</button> "  # noqa
+            f"<button class='btn-primary' style='background:{act['color']};'>{act['btn']}</button> "
             f"<button>Edit</button>"
             f"</div>", unsafe_allow_html=True
         )
