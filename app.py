@@ -1,157 +1,153 @@
+```
+# CS Onboarding Tool - Streamlit App
+
+## Repo Structure
+
+```
+cs-onboarding-tool/
+├── .streamlit/
+│   └── config.toml
+├── assets/
+│   ├── logo.png
+│   ├── bell.png
+│   └── default_profile.png
+├── app.py
+└── requirements.txt
+```
+
+### .streamlit/config.toml
+```toml
+[server]
+headless = true
+port = $PORT
+enableCORS = false
+
+[theme]
+primaryColor = "#3366FF"
+backgroundColor = "#F4F6FC"
+secondaryBackgroundColor = "#FFFFFF"
+textColor = "#111827"
+font = "sans serif"
+```
+
+### requirements.txt
+```
+streamlit
+Pillow
+pandas
+```
+
+### app.py
+```python
 import streamlit as st
-import streamlit.components.v1 as components
+from PIL import Image
+import pandas as pd
+import os
 
-# HTML, CSS og JavaScript kode til 3D-spillet
-html_code = """
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>3D Skovspil - Counter Strike Stil</title>
-  <style>
-    body { margin: 0; overflow: hidden; }
-    canvas { display: block; }
-  </style>
-</head>
-<body>
-<!-- Import af Three.js fra CDN -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r150/three.min.js"></script>
-<script>
-// Opret scene, kamera og renderer
-var scene = new THREE.Scene();
-var camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-var renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
+st.set_page_config(
+    page_title="CS Onboarding Tool",
+    layout="wide",
+    initial_sidebar_state="collapsed",
+)
 
-// Opret jorden som en stor grøn plan
-var groundGeometry = new THREE.PlaneGeometry(500, 500);
-var groundMaterial = new THREE.MeshPhongMaterial({ color: 0x228B22 });
-var ground = new THREE.Mesh(groundGeometry, groundMaterial);
-ground.rotation.x = -Math.PI / 2;
-scene.add(ground);
+# Paths
+ASSETS = os.path.join(os.path.dirname(__file__), "assets")
+logo = Image.open(os.path.join(ASSETS, "logo.png"))
+bell = Image.open(os.path.join(ASSETS, "bell.png"))
+profile = Image.open(os.path.join(ASSETS, "default_profile.png"))
 
-// Tilføj lys til scenen
-var ambientLight = new THREE.AmbientLight(0x404040);
-scene.add(ambientLight);
-var directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-directionalLight.position.set(50, 50, 50);
-scene.add(directionalLight);
+# Custom CSS
+st.markdown(
+    """
+    <style>
+    body { background-color: #F4F6FC; }
+    .top-bar { display: flex; justify-content: space-between; align-items: center;
+                padding: 1rem 2rem; background-color: #FFFFFF; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                position: sticky; top: 0; z-index: 100; }
+    .profile-menu { position: relative; display: flex; align-items: center; cursor: pointer; }
+    .profile-menu-content { display: none; position: absolute; right: 0; top: 48px;
+        background-color: #FFFFFF; border-radius: 8px; box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        min-width: 160px; }
+    .profile-menu:hover .profile-menu-content { display: block; }
+    .profile-menu-content a { display: block; padding: 0.5rem 1rem; color: #111827; text-decoration: none; }
+    .profile-menu-content a.logout { color: #DC2626; border-top: 1px solid #E5E7EB; }
+    .card { background-color: #FFFFFF; border-radius: 12px; padding: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .kpi-value { font-size: 1.5rem; font-weight: 600; }
+    .btn-primary { background-color: #3366FF; color: white; padding: 0.5rem 1rem; border-radius: 6px; border: none; }
+    .btn-filter { background-color: #FFFFFF; border: 1px solid #D1D5DB; padding: 0.5rem 1rem; border-radius: 6px; }
+    </style>
+    """, unsafe_allow_html=True
+)
 
-// Funktion til at tilføje træer i skoven
-function addTree(x, z) {
-    // Træstamme
-    var trunkGeometry = new THREE.CylinderGeometry(0.5, 0.5, 5);
-    var trunkMaterial = new THREE.MeshPhongMaterial({ color: 0x8B4513 });
-    var trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
-    trunk.position.set(x, 2.5, z);
-    scene.add(trunk);
-    // Trækroner
-    var crownGeometry = new THREE.ConeGeometry(2.5, 8, 8);
-    var crownMaterial = new THREE.MeshPhongMaterial({ color: 0x006400 });
-    var crown = new THREE.Mesh(crownGeometry, crownMaterial);
-    crown.position.set(x, 7, z);
-    scene.add(crown);
-}
-// Tilføj 50 træer med tilfældige positioner
-for (var i = 0; i < 50; i++) {
-    var x = Math.random() * 400 - 200;
-    var z = Math.random() * 400 - 200;
-    addTree(x, z);
-}
+# Top Navigation bar
+st.markdown("<div class='top-bar'>"
+            f"<img src='data:image/png;base64,{st.experimental_get_websocket()}' style='height:32px;'>"
+            "<h2>Mover CS Onboarding Tracker</h2>"
+            "<div style='display:flex; align-items:center; gap:1rem;'>"
+            f"<img src='data:image/png;base64,{st.experimental_get_websocket()}' style='height:24px;'/><div class='profile-menu'>"
+            f"<img src='data:image/png;base64,{st.experimental_get_websocket()}' style='height:32px; border-radius:50%; margin-right:0.5rem;'/>"
+            "<span>John Doe (Admin)</span>"
+            "<div class='profile-menu-content'>"
+            "<a href='#'>My Profile</a>"
+            "<a href='#'>Settings</a>"
+            "<a href='#'>Manage accounts</a>"
+            "<a href='#' class='logout'>Logout</a>"
+            "</div></div></div></div>", unsafe_allow_html=True)
 
-// Placér kameraet (førstepersons)
-camera.position.set(0, 2, 0);
+# Main header and buttons
+st.markdown("## Customer Onboarding Dashboard")
+col1, col2 = st.columns([1,1], gap='small')
+with col1:
+    st.markdown("<button class='btn-primary'>+ New Customer</button>", unsafe_allow_html=True)
+with col2:
+    st.markdown("<button class='btn-filter'>Filter</button>", unsafe_allow_html=True)
 
-// Variabler for bevægelse
-var moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
-var speed = 0.5;
+st.markdown("<br>", unsafe_allow_html=True)
 
-// Lyt efter tastetryk for at styre bevægelsen
-document.addEventListener('keydown', function(event) {
-    switch(event.code) {
-        case 'ArrowUp':
-        case 'KeyW':
-            moveForward = true;
-            break;
-        case 'ArrowLeft':
-        case 'KeyA':
-            moveLeft = true;
-            break;
-        case 'ArrowDown':
-        case 'KeyS':
-            moveBackward = true;
-            break;
-        case 'ArrowRight':
-        case 'KeyD':
-            moveRight = true;
-            break;
-    }
-}, false);
-document.addEventListener('keyup', function(event) {
-    switch(event.code) {
-        case 'ArrowUp':
-        case 'KeyW':
-            moveForward = false;
-            break;
-        case 'ArrowLeft':
-        case 'KeyA':
-            moveLeft = false;
-            break;
-        case 'ArrowDown':
-        case 'KeyS':
-            moveBackward = false;
-            break;
-        case 'ArrowRight':
-        case 'KeyD':
-            moveRight = false;
-            break;
-    }
-}, false);
+# KPI Cards
+kpi_cols = st.columns(4, gap='large')
+kpi_data = [
+    {"title": "Active Onboardings", "value": "24", "sub": "This Month", "percent": "+12%"},
+    {"title": "Expected Revenue", "value": "$124,500", "sub": "Realized: $78,200", "percent": None},
+    {"title": "Avg. Bookings", "value": "42", "sub": "Target: 50", "percent": None},
+    {"title": "Onboarding Time", "value": "23 days", "sub": "Target: 30 days", "percent": None},
+]
+for col, item in zip(kpi_cols, kpi_data):
+    with col:
+        st.markdown(f"<div class='card'><h4>{item['title']}</h4>"
+                    f"<div class='kpi-value'>{item['value']}</div>"
+                    f"<small>{item['sub']}</small>"
+                    f"{'<span style=\"float:right; color:#4F46E5;\">'+item['percent']+'</span>' if item['percent'] else ''}"  # noqa
+                    f"</div>", unsafe_allow_html=True)
 
-// Animer scenen og opdater kameraets position
-function animate() {
-    requestAnimationFrame(animate);
+# Table and Next Actions
+left, right = st.columns([3, 1], gap='large')
 
-    // Bestem bevægelsesretningen baseret på kameraets fremadrettede vektor
-    var direction = new THREE.Vector3();
-    camera.getWorldDirection(direction);
-    direction.y = 0;  // Ignorer lodret retning
-    direction.normalize();
+with left:
+    st.markdown("### Active Onboardings")
+    df = pd.DataFrame([
+        ["Acme Corp", "Day 12 of 30 (40%)", "$12,500/$25,000", 18, "On Track"],
+        ["Global Logistics", "Day 8 of 30 (27%)", "$5,200/$15,000", 7, "Needs Attention"],
+        ["Trans Continental", "Day 25 of 30 (83%)", "$42,000/$45,000", 38, "Ahead of Schedule"],
+        ["Swift Shipping", "Day 15 of 30 (50%)", "$18,500/$30,000", 22, "Meeting Expectations"],
+    ], columns=["Customer", "Progress", "Revenue", "Bookings", "Status"])
+    st.table(df)
 
-    // Beregn "højre" vektor (vinkelret på kameraets retning)
-    var right = new THREE.Vector3();
-    right.crossVectors(camera.up, direction).normalize();
-
-    // Saml bevægelsesvektoren
-    var moveVector = new THREE.Vector3();
-    if (moveForward) moveVector.add(direction);
-    if (moveBackward) moveVector.sub(direction);
-    if (moveLeft) moveVector.add(right);
-    if (moveRight) moveVector.sub(right);
-
-    moveVector.normalize().multiplyScalar(speed);
-    camera.position.add(moveVector);
-
-    renderer.render(scene, camera);
-}
-animate();
-
-// Sørg for, at canvas tilpasses ved vinduesændringer
-window.addEventListener('resize', function(){
-    var width = window.innerWidth;
-    var height = window.innerHeight;
-    renderer.setSize(width, height);
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
-});
-</script>
-</body>
-</html>
-"""
-
-st.title("3D Skovspil i Counter Strike Stil")
-st.write("Brug piletasterne (eller WASD) til at navigere gennem skoven.")
-
-# Indlejr HTML/JS-spillet i Streamlit-appen
-components.html(html_code, height=600, scrolling=True)
+with right:
+    st.markdown("### Next Actions <a href='#'>+ Add</a>", unsafe_allow_html=True)
+    actions = [
+        {"title": "Follow-up Meeting", "company": "Acme Corp", "time": "10:30 AM - 11:15 AM", "tag": "Today", "btn": "Start", "color": "#3366FF"},
+        {"title": "First Quarter Review", "company": "Trans Continental", "time": "2:00 PM - 3:00 PM", "tag": "Tomorrow", "btn": "Prepare", "color": "#8B5CF6"},
+        {"title": "Risk Assessment", "company": "Global Logistics", "time": "9:00 AM - 10:00 AM", "tag": "Fri, Jun 2", "btn": "Review", "color": "#FBBF24"},
+        {"title": "Onboarding Completion", "company": "Swift Shipping", "time": "1:30 PM - 2:30 PM", "tag": "Mon, Jun 5", "btn": "Prepare", "color": "#10B981"},
+    ]
+    for act in actions:
+        st.markdown(
+            f"<div class='card' style='border-left:4px solid {act['color']}; margin-bottom:1rem;'>"
+            f"<h5>{act['title']}</h5><small>{act['company']}</small><br>"
+            f"<small>🕒 {act['time']} <span style='float:right; background:{act['color']}; color:white; padding:2px 6px; border-radius:4px;'>{act['tag']}</span></small><br><br>"
+            f"<button class='btn-primary' style='background:{act['color']};'>{act['btn']}</button> "  # noqa
+            f"<button>Edit</button>"
+            f"</div>", unsafe_allow_html=True
+        )
+```
